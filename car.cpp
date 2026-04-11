@@ -89,9 +89,6 @@ void clear (void) {
 struct Obj_position{int x, y;};
 Obj_position car, bar;
 
-
-
-
 int square_map[2] = {3, 9};
 int speed = 500;
 bool game_over = true;
@@ -210,6 +207,5 @@ void game(){
 }
 int main(void){
     game();
-    // Должно быть 4 хуйни на дороге, + по две штуки за раз
     return 0;
 }
