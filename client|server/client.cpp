@@ -10,7 +10,6 @@ using namespace std;
 int main(int argc, char *argv[]) {
 
   char *name_user = argv[1];
-  char byte = char(9);
   int client;
   sockaddr_in addr;
   addr.sin_family = AF_INET;
@@ -38,11 +37,9 @@ int main(int argc, char *argv[]) {
   } else {
     cout << "TEST" << endl;
     send(client, name_user, sizeof(name_user), 0);
-    string message = " ";
+    string message(1024, char(NULL));
     while(true){
-        message = "";
         getline(cin, message);
-        cout << message;
         send(client, message.c_str(), message.size(), 0);
     }
     cout << "Отправил ваше сообщение: " << message << endl;
