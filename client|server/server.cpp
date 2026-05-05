@@ -4,15 +4,18 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-
-
 using namespace std;
+
+void clear_buff(char mass[], int size){
+    for(int i = 0; i < size; i++){
+        mass[i] = char(NULL);
+    }
+}
 
 int main(int argc, char *argv[]) {
 
     sockaddr_in addr;
     addr.sin_family = AF_INET;
-    char byte = char(9);
     addr.sin_port = htons(8080); /* рекомендуется всегда использовать htons() 
     для преобразования порта в сетевой порядок байт, чтобы гарантировать корректную 
     работу вашего сетевого приложения на разных платформах.
@@ -33,30 +36,39 @@ int main(int argc, char *argv[]) {
         cout << "Сокет стал в режим прослушки" << endl;
         
         int client;
-
+        char user[10];
         if ((client = accept(server, nullptr, nullptr)) < 0) {
             cout << "Не получилось соединится с клиентом" << endl;
             close(server);
             return -1;
         }
-        else
+        else{
+            recv(client, user, 1024, 0);
             cout << "Успешное соединение с клиентом" << endl;
+            
 
         char buf[1024];
-        char user[10];
         int bytes_read;
-        recv(client, user, 1024, 0);
         
-        while(true){    
+        while(true){   
+            clear_buff(buf, sizeof(buf) / 4); // обнуление строки, иначе запоминает и выводит старые записаные...
             if ((bytes_read = recv(client, buf, 1024, 0)) == 0) {
                 cout << "Соединение разорвано";
                 return 1;
             }
             else {
+                if(buf[0] == '1'){
+                    cout << "Welcome to game!!!\n";
+                }else if(buf[0] == '0'){
+                    close(client);
+                    close(server);
+                    return 1;
+                }
                 cout << user << ": " << buf << endl;
             }}
 
         // close(client);
+        }
     }
     else {
         close(server);
@@ -64,7 +76,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // close(server);
+    close(server);
 
 
     return 0;
