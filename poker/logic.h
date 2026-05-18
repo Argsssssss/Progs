@@ -156,17 +156,23 @@ int two_pair(Card cards[], int numb_users){
     }
     int max_pair_table = 0;
     int max_pair_user = 0;
-    for(size_t i = 0; i < 5;i++){
+    for(size_t i = 0; i < k;i++){
         if(bdp[i].user < 5){
             if(bdp[i].pair_card > max_pair_table){
                 max_pair_table = bdp[i].pair_card;
             }
+        }else{
+            if(bdp[i].pair_card > max_pair_user){
+                max_pair_user = bdp[i].pair_card;
+            }
         }
     }
+    
     for(size_t i = 0; i < k; i++){
         cout << "User: " << bdp[i].user << " Pair: " << bdp[i].pair_card << " " << bdp[i].L_R << endl;
     }
     cout << "MAX pair table " << max_pair_table << endl;
+    cout << "MAX pair user " << max_pair_user << endl;
     return 0;
 }
 int set(Card cards[], int numb_users){
@@ -270,7 +276,81 @@ int set(Card cards[], int numb_users){
     }
     return 0;
 }
+
 int street(Card cards[], int numb_users){
+    // cout << "TAB: " << endl;
+    // for(size_t i = 0; i < 5; i++){
+    //     cout << cards[i].card << ", ";
+    // }
+    // cout << endl << "Users: " << endl;
+    // for(size_t i = 5; i < 15; i++){
+    //     cout << cards[i].card << endl;
+    // }
+    size_t mass_street[5][7]{{0}};
+    for (size_t i = 0, k = 5; i < 5; i++)
+    {
+        for (size_t j = 0; j < 5; j++)
+        {
+            mass_street[i][j] = cards[j].card;
+        }
+        for (size_t j = 5; j < 7; j++)
+        {
+            mass_street[i][j] = cards[k].card;
+            k++;
+        }
+    }
+    for (size_t i = 0; i < 5; i++)
+    {
+        for (size_t j = 0; j < 7; j++)
+        {
+            for (size_t k = 6; k >= 1; k--)
+            {
+                if(mass_street[i][k] < mass_street[i][k - 1]){
+                    swap(mass_street[i][k], mass_street[i][k - 1]);
+                }
+            }
+        }
+    }
+    for (size_t i = 0; i < 5; i++)
+    {
+        for (size_t j = 0; j < 7; j++)
+        {
+            if(mass_street[i][j] == mass_street[i][j + 1]){
+                for (size_t k = j + 1; k < 7; k++)
+                {
+                    mass_street[i][k] = mass_street[i][k + 1];
+                }
+            }
+        }
+        
+    }
+    
+    for (size_t i = 0; i < 5; i++)
+    {
+        for (size_t j = 0; j < 7; j++)
+        {
+            cout << mass_street[i][j] << " | ";
+        }
+        cout << endl;
+    }
+    int users_with_street[5]{0};
+    for (size_t i = 0; i < 5; i++)
+    {
+        for (size_t j = 0; j < 3; j++)
+        {
+            if(mass_street[i][j] == mass_street[i][j + 1] - 1){
+                if(mass_street[i][j + 1] - 1 == mass_street[i][j + 2] - 2){
+                    if(mass_street[i][j + 2] - 2 == mass_street[i][j + 3] - 3){
+                        if(mass_street[i][j + 3] - 3 == mass_street[i][j + 4] - 4){
+                            users_with_street[i] = i;
+                        }
+                    }
+                }
+            }
+        }
+        cout << "Max_on_user: " << users_with_street[i] << endl;
+    }
+    
     return 0;
 }
 int flash(Card cards[], int numb_users){
@@ -291,10 +371,8 @@ int flash_royal(Card cards[], int numb_users){
 }
 int logic(Card cards[], int numb_users){ // Возвращает номер игрока, который выиграл
     int user = 0;
-    
-    if(two_pair(cards, numb_users) != 0){
-        cout <<"Two_pair: ";
-        return two_pair(cards, numb_users);
+    if(street(cards, numb_users) != 0){
+        return street(cards, numb_users);
     }
 
     // if(flash_royal(cards, numb_users) != 0){
