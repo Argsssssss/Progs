@@ -173,7 +173,7 @@ int two_pair(Card cards[], int numb_users){
     }
     cout << "MAX pair table " << max_pair_table << endl;
     cout << "MAX pair user " << max_pair_user << endl;
-    return 0;
+    return max_pair_user;
 }
 int set(Card cards[], int numb_users){
     struct Base_boub_pairs{
@@ -286,8 +286,21 @@ int street(Card cards[], int numb_users){
     // for(size_t i = 5; i < 15; i++){
     //     cout << cards[i].card << endl;
     // }
-    size_t mass_street[5][7]{{0}};
-    for (size_t i = 0, k = 5; i < 5; i++)
+    int users = 0;
+    if(numb_users > 4 && numb_users < 7){
+        users = 1;
+    }else if(numb_users > 6 && numb_users < 9){
+        users = 2;
+    }else if(numb_users > 8 && numb_users < 11){
+        users = 3;
+    }else if(numb_users > 10 && numb_users < 13){
+        users = 4;
+    }else if(numb_users > 12 && numb_users < 16){
+        users = 5;
+    }
+    size_t mass_street[users][7]{{0}};
+    
+    for (size_t i = 0, k = 5; i < users; i++) // записывает стол и юзеров в массив для сравнения
     {
         for (size_t j = 0; j < 5; j++)
         {
@@ -299,7 +312,7 @@ int street(Card cards[], int numb_users){
             k++;
         }
     }
-    for (size_t i = 0; i < 5; i++)
+    for (size_t i = 0; i < users; i++)
     {
         for (size_t j = 0; j < 7; j++)
         {
@@ -311,7 +324,7 @@ int street(Card cards[], int numb_users){
             }
         }
     }
-    for (size_t i = 0; i < 5; i++)
+    for (size_t i = 0; i < users; i++)
     {
         for (size_t j = 0; j < 7; j++)
         {
@@ -325,16 +338,16 @@ int street(Card cards[], int numb_users){
         
     }
     
-    for (size_t i = 0; i < 5; i++)
-    {
-        for (size_t j = 0; j < 7; j++)
-        {
-            cout << mass_street[i][j] << " | ";
-        }
-        cout << endl;
-    }
-    int users_with_street[5]{0};
-    for (size_t i = 0; i < 5; i++)
+    // for (size_t i = 0; i < users; i++)
+    // {
+    //     for (size_t j = 0; j < 7; j++)
+    //     {
+    //         cout << mass_street[i][j] << " | ";
+    //     }
+    //     cout << endl;
+    // }
+    int users_with_street[users]{0};
+    for (size_t i = 0; i < users; i++)
     {
         for (size_t j = 0; j < 3; j++)
         {
@@ -342,28 +355,120 @@ int street(Card cards[], int numb_users){
                 if(mass_street[i][j + 1] - 1 == mass_street[i][j + 2] - 2){
                     if(mass_street[i][j + 2] - 2 == mass_street[i][j + 3] - 3){
                         if(mass_street[i][j + 3] - 3 == mass_street[i][j + 4] - 4){
-                            users_with_street[i] = i;
+                            users_with_street[i] = mass_street[i][j];
                         }
                     }
                 }
             }
         }
-        cout << "Max_on_user: " << users_with_street[i] << endl;
+        // cout << "Max_on_user: " << users_with_street[i] << endl;
+    }
+
+    int begin_street = 0, count = 0;
+
+    for (size_t i = 0; i < users; i++)
+    {
+        if(users_with_street[i] > begin_street){
+            begin_street = users_with_street[i];
+        }
+    }
+    for (size_t i = 0; i < users; i++)
+    {
+        if(begin_street == users_with_street[i]){
+            count++;
+        }
+    }
+    if(count == 1){ // если стрит только у одного
+        for (size_t i = 0; i < users; i++)
+        {
+            if(begin_street == users_with_street[i]){
+                if(i == 0){
+                    return 5;
+                }else if(i == 1){
+                    return 7;
+                }else if(i == 2){
+                    return 9;
+                }else if(i == 3){
+                    return 11;
+                }else if(i == 4){
+                    return 13;
+                }
+            }
+        }
+        
+    }else{ // если у нескольких
+
+    }
+    return 0;
+}
+int flash(Card cards[], int numb_users){
+    int users = 0;
+    if(numb_users > 4 && numb_users < 7){
+        users = 1;
+    }else if(numb_users > 6 && numb_users < 9){
+        users = 2;
+    }else if(numb_users > 8 && numb_users < 11){
+        users = 3;
+    }else if(numb_users > 10 && numb_users < 13){
+        users = 4;
+    }else if(numb_users > 12 && numb_users < 16){
+        users = 5;
+    }
+    size_t mass_flash[users][7]{{0}};
+    
+    for (size_t i = 0, k = 5; i < users; i++) // записывает стол и юзеров в массив для сравнения
+    {
+        for (size_t j = 0; j < 5; j++)
+        {
+            mass_flash[i][j] = cards[j].suits;
+        }
+        for (size_t j = 5; j < 7; j++)
+        {
+            mass_flash[i][j] = cards[k].suits;
+            k++;
+        }
+    }
+    int count[users]{0};
+    for (size_t i = 0, buff = 0; i < users; i++)
+    {   
+        
+        for (size_t k = 0; k < 4; k++)
+        {   
+            if(buff > count[i]){count[i] = buff;}
+            buff = 0;
+
+            for(size_t j = 0; j < 7; j++){
+                if(mass_flash[i][j] == k){buff++;}
+            }
+        }
+        if(count[i] == 5){
+            if(i == 0){
+                return 5;
+            }else if(i == 1){
+                return 7;
+            }else if(i == 2){
+                return 9;
+            }else if(i == 3){
+                return 11;
+            }else if(i == 4){
+                return 13;
+            }
+        }
     }
     
     return 0;
 }
-int flash(Card cards[], int numb_users){
-    return 0;
-}
 int full_house(Card cards[], int numb_users){
-    // if(set(cards, numb_users) == pair_k(cards, numb_users)){return set(cards, numb_users);}
+    if(set(cards, numb_users) == pair_k(cards, numb_users)){return set(cards, numb_users);}
     return 0;
 }
 int kare(Card cards[], int numb_users){
     return 0;
 }
 int street_flash(Card cards[], int numb_users){
+    if(street(cards, numb_users) == flash(cards, numb_users)){
+        return flash(cards, numb_users);
+    }
     return 0;
 }
 int flash_royal(Card cards[], int numb_users){
@@ -371,35 +476,38 @@ int flash_royal(Card cards[], int numb_users){
 }
 int logic(Card cards[], int numb_users){ // Возвращает номер игрока, который выиграл
     int user = 0;
-    if(street(cards, numb_users) != 0){
+    
+    if(flash_royal(cards, numb_users) != 0){
+        cout << "Flash_royal: ";
+        return flash_royal(cards, numb_users);
+    }else if(street_flash(cards, numb_users) != 0){
+        cout << "Street_flash: ";
+        return street_flash(cards, numb_users);
+    }else if(kare(cards, numb_users) != 0){
+        cout << "Kare: ";
+        return kare(cards, numb_users);
+    }else if(full_house(cards, numb_users) != 0){
+        cout << "Full_house: ";
+        return full_house(cards, numb_users);
+    }else if(flash(cards, numb_users) != 0){
+        cout << "Flash: ";
+        return flash(cards, numb_users);
+    }else if(street(cards, numb_users) != 0){
+        cout << "Street: ";
         return street(cards, numb_users);
+    }else if(set(cards, numb_users) != 0){
+        cout << "Set: ";
+        return set(cards, numb_users);
     }
-
-    // if(flash_royal(cards, numb_users) != 0){
-    //     return flash_royal(cards, numb_users);
-    // }else if(street_flash(cards, numb_users) != 0){
-    //     return street_flash(cards, numb_users);
-    // }else if(kare(cards, numb_users) != 0){
-    //     return kare(cards, numb_users);
-    // }else if(full_house(cards, numb_users) != 0){
-    //     return full_house(cards, numb_users);
-    // }else if(flash(cards, numb_users) != 0){
-    //     return flash(cards, numb_users);
-    // }else if(street(cards, numb_users) != 0){
-    //     return street(cards, numb_users);
-    // }else if(set(cards, numb_users) != 0){
-    //     cout << "Set: ";
-    //     return set(cards, numb_users);
-    // }
-    // else if(two_pair(cards, numb_users) != 0){
-    //     cout <<"Two_pair: ";
-    //     return two_pair(cards, numb_users);
-    // }else if(pair_k(cards, numb_users) != 0){
-    //     cout << "Pair: ";
-    //     return pair_k(cards, numb_users);
-    // }else{
-    //     cout << "Senior_card: ";
-    //     return senior_card(cards, numb_users);
-    // }
+    else if(two_pair(cards, numb_users) != 0){
+        cout <<"Two_pair: ";
+        return two_pair(cards, numb_users);
+    }else if(pair_k(cards, numb_users) != 0){
+        cout << "Pair: ";
+        return pair_k(cards, numb_users);
+    }else{
+        cout << "Senior_card: ";
+        return senior_card(cards, numb_users);
+    }
     return 0;
 }
