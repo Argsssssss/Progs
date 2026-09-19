@@ -1,0 +1,29 @@
+#include <iostream>
+#include <fstream>
+using namespace std;
+
+int main(void){
+    ifstream file_byte("file.exe", ios::binary);
+    
+    char byte;
+    
+    long int key = 0xABFF112233; 
+    string u_byte;
+    while(file_byte.get(byte)){
+        int i = 0;
+        u_byte += static_cast<unsigned char>(byte);
+        
+        cout << hex << static_cast<unsigned int>(u_byte[i]) << '\n';
+    }
+    for (size_t i = 0; i < u_byte.size(); i++)
+    {
+        u_byte[i] ^= key;
+    }
+    cout << u_byte;
+    ofstream in_file("file.exe");
+    in_file << hex << u_byte;
+    
+    file_byte.close();
+
+    return 0;
+}
