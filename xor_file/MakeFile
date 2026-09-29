@@ -1,8 +1,9 @@
-all: main genKey
+all: genKey main
+genKey: genKey.cpp
+	g++ genKey.cpp -o genKey.out
+	./genKey.out "key.k"
+	rm genKey.out
 main: main.cpp 
 	g++ main.cpp -o main.out
 	./main.out "qwe.odt"
-genKey: genKey.cpp
-	g++ genKey.cpp -o genKey.out
-	./genKey.out
-	
+	clear
