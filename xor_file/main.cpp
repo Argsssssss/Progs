@@ -33,12 +33,8 @@ int main(int argc, char* argv[]){
     
     for (size_t i = 0; i < u_byte_text_file.size(); i++)
     {
-        for (size_t j = 0; j < u_byte_key.size(); j++)
-        {
-            u_byte_text_file[i] ^= 5;
-        }
+        u_byte_text_file[i] ^= u_byte_key[i % sizeof(u_byte_key)];
     }
-    cout << u_byte_text_file;
     ofstream in_file(argv[1]);
     in_file << hex << u_byte_text_file;
     file_byte.close();
