@@ -5,5 +5,6 @@ genKey: genKey.cpp
 	rm genKey.out
 main: main.cpp 
 	g++ main.cpp -o main.out
-	./main.out "qwe.odt"
+	./main.out "qwe.odt" // Название файла для шифрования
 	clear
+// Чтобы расшифровать обратно требуется повторно запустить main.out и добавить название файла, как в строчке 7
