@@ -68,8 +68,7 @@ static const u_int8_t __S[16] = {
     0x01, 0x01, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x01, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x01
 };
 void print_bite(u_int64_t num){
-
-    for (size_t i = 0; i < 65; i++)
+    for (size_t i = 1; i < 65; i++)
     {   
         if(num - (pow(2, 64 - i)) >= 0){
             num <<= i + 1;
@@ -83,6 +82,14 @@ void print_bite(u_int64_t num){
     }
     cout << '\n';
 }
+u_int64_t counter_bite(u_int64_t hex){
+    u_int64_t buff = 0;
+    for (size_t i = 0; i < 65; i++)
+    {   
+        hex - (pow(2, 64 - i)) >= 0 ? buff++ : 0;
+    }
+    return buff;
+}
 u_int64_t permutation(u_int64_t num, u_int8_t pattern[], const size_t size_mass){
     u_int64_t buff = 0;
     for (u_int8_t i = 0; i < size_mass; i++)
@@ -91,11 +98,25 @@ u_int64_t permutation(u_int64_t num, u_int8_t pattern[], const size_t size_mass)
     }
     return buff;
 }
-u_int64_t shift(u_int64_t);
+
+u_int64_t shift(u_int64_t block, size_t shift_pos, char targ, u_int64_t size_block){
+    switch (targ)
+    {
+        case 'L':
+            return (block >> counter_bite(size_block) - shift_pos | block << shift_pos ) & size_block;
+            break;
+        case 'R':
+            return (block >> shift_pos | block << counter_bite(size_block) - shift_pos) & size_block;
+            break;
+        default:
+            return block;
+    };
+    return block;
+}
 u_int64_t str_to_uint(string mes){
     u_int64_t buff = 0;
     for (size_t i = 0; i < mes.size(); i++)
-    {
+    {   
         buff |= mes[i];
         i != mes.size() - 1 ? buff <<= 8 : buff; 
     }
@@ -121,8 +142,8 @@ string ENCRYPT(string mes, string key);
 string DECRYPT(string encrted_mes, string key);
 
 int main(void){
-    string mes = "ABCDEFGH"; // Какие то 8 байт, просто блок сообщения, по идее сюда можно байты с файла вставить, но мало(8), блок DES 64 бит, неболее, а мало... и долго
+    string mes = "zzzzzzzz"; // Какие то 8 байт, просто блок сообщения, по идее сюда можно байты с файла вставить, но мало(8), блок DES 64 бит, неболее, а мало... и долго
     string key = "0xFFFFFF"; // Такой же 8 байтный симметричный ключ
-    usig64_to_two_usig32(str_to_uint(mes));
     return 0;
 }
+
