@@ -74,6 +74,18 @@ static const u_int8_t __K2P[28] = {
     0x3F, 0x37, 0x2F, 0x27, 0x1F, 0x17, 0x0F, 0x07, 0x3E, 0x36, 0x2E, 0x26, 0x1E, 0x16,
     0x0E, 0x06, 0x3D, 0x35, 0x2D, 0x25, 0x1D, 0x15, 0x0D, 0x05, 0x1C, 0x14, 0x0C, 0x04,
 };
+static const u_int8_t __CP[48] = {
+    0x0E, 0x11, 0x0B, 0x18, 0x01, 0x05, 0x03, 0x1C, 0x0F, 0x06, 0x15, 0x0A, 
+    0x17, 0x19, 0x0C, 0x04, 0x1A, 0x08, 0x10, 0x07, 0x1B, 0x14, 0x0D, 0x02, 
+    0x29, 0x34, 0x1F, 0x25, 0x2F, 0x37, 0x1E, 0x28, 0x33, 0x2D, 0x21, 0x30, 
+    0x2C, 0x31, 0x27, 0x38, 0x22, 0x35, 0x2E, 0x2A, 0x32, 0x24, 0x1D, 0x20
+};
+static const u_int8_t __EP[48] = {
+    0x20, 0x01, 0x02, 0x03, 0x04, 0x05, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,
+    0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11,
+    0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19,
+    0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1C, 0x1D, 0x1E, 0x1F, 0x20, 0x01
+};
 static const u_int8_t __S[16] = {
     0x01, 0x01, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x01, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x01
 };
@@ -147,17 +159,50 @@ LR_blocks_32_bits usig64_to_two_usig32(u_int64_t block){
     buff._R = block & 0xFFFFFFFF;
     return buff;
 }
+void calc_round_keys(string key){
+    LR_blocks_32_bits key_blocks;
+    u_int64_t buff_key;
+    key_blocks._L = permutation(str_to_uint(key), __K1P, 28);
+    key_blocks._R = permutation(str_to_uint(key), __K2P, 28);
 
+    for(int i = 0; i < 16; i++){
+        key_blocks._L = shift(key_blocks._L, __S[i], 'L', 0xFFFFFFF);
+        key_blocks._R = shift(key_blocks._R, __S[i], 'L', 0xFFFFFFF);
+        buff_key = key_blocks._L;
+        buff_key = permutation((buff_key << 28) | key_blocks._R, __CP, 48);
+        // тут же и шифрование
+    }
+    print_bite(buff_key);
+}
+void s_blocks(u_int8_t s_block){
+    cout << int(__Sbox[0][(s_block >> 4 | s_block & 0x01) & 0x3][(s_block >> 1) & 0xF]);
+}
 string ENCRYPT(string mes, string key){
     LR_blocks_32_bits buff_LR_64 = usig64_to_two_usig32(permutation(str_to_uint(mes), __IP, 64));
-    
+    LR_blocks_32_bits key_blocks;
+    u_int64_t buff_key, buff_block;
+    key_blocks._L = permutation(str_to_uint(key), __K1P, 28);
+    key_blocks._R = permutation(str_to_uint(key), __K2P, 28);
+
+    for(int i = 0; i < 16; i++){
+        key_blocks._L = shift(key_blocks._L, __S[i], 'L', 0xFFFFFFF);
+        key_blocks._R = shift(key_blocks._R, __S[i], 'L', 0xFFFFFFF);
+        buff_key = key_blocks._L;
+        key_blocks._L = 0;
+        buff_key = permutation((buff_key << 28) | key_blocks._R, __CP, 48);
+        buff_block = permutation(buff_LR_64._R, __EP, 48) ^ buff_key;
+        key_blocks._L |= __Sbox[i][((buff_block   тут надо что то) >> 4 | (buff_block   тут надо что то) & 0x01) & 0x3][((buff_block   тут надо что то) >> 1) & 0xF];
+        // тут же и шифрование
+    }
     return mes;
 };
 string DECRYPT(string encrted_mes, string key);
 
 int main(void){
     string mes = "zzzzzzzz"; // Какие то 8 байт, просто блок сообщения, по идее сюда можно байты с файла вставить, но мало(8), блок DES 64 бит, неболее, а мало... и долго
-    string key = "0xFFFFFF"; // Такой же 8 байтный симметричный ключ
+    string key = "zzzzzzzz"; // Такой же 8 байтный симметричный ключ
+    // calc_round_keys(key);
+    s_blocks(0x2E);
     return 0;
 }
 
