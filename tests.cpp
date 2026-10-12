@@ -65,6 +65,16 @@ static const u_int8_t __IP[64] = {
     0x3D, 0x35, 0x2D, 0x25, 0x1D, 0x15, 0x0D, 0x05,
     0x3F, 0x37, 0x2F, 0x27, 0x1F, 0x13, 0x0F, 0x07
 };
+static const u_int8_t __FP[64] = {
+    0x28, 0x08, 0x30, 0x10, 0x38, 0x18, 0x40, 0x20,
+    0x27, 0x07, 0x2F, 0x0F, 0x37, 0x17, 0x3F, 0x1F,
+    0x26, 0x06, 0x2E, 0x0E, 0x36, 0x16, 0x3E, 0x1E,
+    0x25, 0x05, 0x2D, 0x0D, 0x35, 0x15, 0x3D, 0x1D,
+    0x24, 0x04, 0x2C, 0x0C, 0x34, 0x14, 0x3C, 0x1C,
+    0x23, 0x03, 0x2B, 0x0B, 0x33, 0x13, 0x3B, 0x1B,
+    0x22, 0x02, 0x2A, 0x0A, 0x32, 0x12, 0x3A, 0x1A,
+    0x21, 0x01, 0x29, 0x09, 0x31, 0x11, 0x39, 0x19
+};
 static const u_int8_t __K1P[28] = {
     0x39, 0x31, 0x29, 0x21, 0x19, 0x11, 0x09, 0x01, 0x3A, 0x32, 0x2A, 0x22, 0x1A, 0x12,
     0x0A, 0x02, 0x3B, 0x33, 0x2B, 0x23, 0x1B, 0x13, 0x0B, 0x03, 0x3C, 0x34, 0x2C, 0x24,
@@ -89,6 +99,15 @@ static const u_int8_t __EP[48] = {
 static const u_int8_t __S[16] = {
     0x01, 0x01, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x01, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x01
 };
+static const u_int8_t __P[32] = { 
+    0x10, 0x07, 0x14, 0x15, 0x1D,
+    0x0C, 0x1C, 0x11, 0x01, 0x0F, 0x17, 
+    0x1A, 0x05, 0x18, 0x1F, 0x0A, 0x02, 
+    0x08, 0x18, 0x0E, 0x20, 0x1B, 0x03, 
+    0x09, 0x13, 0x0D, 0x1E,
+    0x06, 0x16, 0x0B, 0x04, 0x19
+};
+
 void print_bite(u_int64_t num){
     for (size_t i = 1; i < 65; i++)
     {   
@@ -103,6 +122,11 @@ void print_bite(u_int64_t num){
         }
     }
     cout << '\n';
+}
+void swap_blocks(u_int32_t &a, u_int64_t &b){
+    u_int64_t c = a;
+    a = b;
+    b = c;
 }
 u_int64_t counter_bite(u_int64_t hex){
     u_int64_t buff = 0;
@@ -120,7 +144,6 @@ u_int64_t permutation(u_int64_t num, const u_int8_t pattern[], const size_t size
     }
     return buff;
 }
-
 u_int64_t shift(u_int64_t block, size_t shift_pos, char targ, u_int64_t size_block){
     switch (targ)
     {
@@ -142,7 +165,7 @@ u_int64_t str_to_uint(string mes){
         buff |= mes[i];
         i != mes.size() - 1 ? buff <<= 8 : buff; 
     }
-    print_bite(buff);
+    // print_bite(buff);
     return buff;
 }
 string uint_to_str(u_int64_t mes_byte){
@@ -159,53 +182,67 @@ LR_blocks_32_bits usig64_to_two_usig32(u_int64_t block){
     buff._R = block & 0xFFFFFFFF;
     return buff;
 }
-void calc_round_keys(string key){
-    LR_blocks_32_bits key_blocks;
-    u_int64_t buff_key;
-    key_blocks._L = permutation(str_to_uint(key), __K1P, 28);
-    key_blocks._R = permutation(str_to_uint(key), __K2P, 28);
-
-    for(int i = 0; i < 16; i++){
-        key_blocks._L = shift(key_blocks._L, __S[i], 'L', 0xFFFFFFF);
-        key_blocks._R = shift(key_blocks._R, __S[i], 'L', 0xFFFFFFF);
-        buff_key = key_blocks._L;
-        buff_key = permutation((buff_key << 28) | key_blocks._R, __CP, 48);
-        // тут же и шифрование
+u_int32_t s_blocks(u_int8_t s_block){
+    u_int32_t buff = 0x00;
+    for (size_t i = 0; i < 8; i++)
+    {
+        buff |= __Sbox[i][(((s_block >> 48 - ((i + 1) * 6)) & 0x20) >> 4 | s_block & 0x01) & 0x3][(s_block >> 1) & 0xF];
+        i != 15 - 1? buff <<= 4 : buff;
     }
-    print_bite(buff_key);
+    return buff;
 }
-// void s_blocks(u_int8_t s_block){
-//     cout << int(__Sbox[0][(s_block >> 4 | s_block & 0x01) & 0x3][(s_block >> 1) & 0xF]);
-// }
 string ENCRYPT(string mes, string key){
     LR_blocks_32_bits buff_LR_64 = usig64_to_two_usig32(permutation(str_to_uint(mes), __IP, 64));
+
     LR_blocks_32_bits key_blocks;
-    u_int64_t buff_key, buff_block;
+
+    u_int64_t buff_R_block = buff_LR_64._R;
+
     key_blocks._L = permutation(str_to_uint(key), __K1P, 28);
     key_blocks._R = permutation(str_to_uint(key), __K2P, 28);
 
     for(int i = 0; i < 16; i++){
         key_blocks._L = shift(key_blocks._L, __S[i], 'L', 0xFFFFFFF);
         key_blocks._R = shift(key_blocks._R, __S[i], 'L', 0xFFFFFFF);
-        buff_key = key_blocks._L;
-        key_blocks._L = 0;
-        buff_key = permutation((buff_key << 28) | key_blocks._R, __CP, 48);
-        buff_block = permutation(buff_LR_64._R, __EP, 48) ^ buff_key;
-        key_blocks._L |= __Sbox[i][(((buff_block >> 48 - ((i + 1) * 6)) & 0x20) >> 4 | buff_block & 0x01) & 0x3][(buff_block >> 1) & 0xF];
-        i != 15 ? key_blocks._L <<= 4 : 0;
-        // тут же и шифрование
+
+        buff_R_block = permutation(s_blocks(permutation(buff_R_block, __EP, 48) ^ permutation((key_blocks._L << 28) | key_blocks._R, __CP, 48)), __P, 32);
+        buff_LR_64._L ^= buff_R_block;
+        swap_blocks(buff_LR_64._L, buff_R_block);
     }
-    return mes;
+
+    return uint_to_str(permutation(buff_LR_64._L | buff_R_block, __FP, 64));
+
 };
-string DECRYPT(string encrted_mes, string key);
+string DECRYPT(string encrted_mes, string key){
+    LR_blocks_32_bits buff_LR_64 = usig64_to_two_usig32(permutation(str_to_uint(encrted_mes), __IP, 64));
+    LR_blocks_32_bits key_blocks;
+
+    u_int64_t buff_L_block = buff_LR_64._L;
+
+    key_blocks._L = permutation(str_to_uint(key), __K1P, 28);
+    key_blocks._R = permutation(str_to_uint(key), __K2P, 28);
+
+    for(int i = 15; i >= 0; i--){
+        key_blocks._L = shift(key_blocks._L, __S[i], 'L', 0xFFFFFFF);
+        key_blocks._R = shift(key_blocks._R, __S[i], 'L', 0xFFFFFFF);
+
+        buff_L_block = permutation(s_blocks(permutation(buff_L_block, __EP, 48) ^ permutation((key_blocks._L << 28) | key_blocks._R, __CP, 48)), __P, 32);
+        buff_LR_64._L ^= buff_L_block;
+        swap_blocks(buff_LR_64._L, buff_L_block);
+    }
+
+    return uint_to_str(permutation(buff_LR_64._L | buff_L_block, __FP, 64));
+};
 
 int main(void){
     string mes = "zzzzzzzz"; // Какие то 8 байт, просто блок сообщения, по идее сюда можно байты с файла вставить, но мало(8), блок DES 64 бит, неболее, а мало... и долго
     string key = "zzzzzzzz"; // Такой же 8 байтный симметричный ключ
     // calc_round_keys(key);
-    // ENCRYPT(mes,key);
+    mes = ENCRYPT(mes,key);
+    cout << mes << "\n";
+    cout << DECRYPT(mes, key);
     // s_blocks(0x2E);
-
+// i == 0 ? buff_LR_64._R &= 0x00 : 0;
     return 0;
 }
 
