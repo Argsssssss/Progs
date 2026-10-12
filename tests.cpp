@@ -174,9 +174,9 @@ void calc_round_keys(string key){
     }
     print_bite(buff_key);
 }
-void s_blocks(u_int8_t s_block){
-    cout << int(__Sbox[0][(s_block >> 4 | s_block & 0x01) & 0x3][(s_block >> 1) & 0xF]);
-}
+// void s_blocks(u_int8_t s_block){
+//     cout << int(__Sbox[0][(s_block >> 4 | s_block & 0x01) & 0x3][(s_block >> 1) & 0xF]);
+// }
 string ENCRYPT(string mes, string key){
     LR_blocks_32_bits buff_LR_64 = usig64_to_two_usig32(permutation(str_to_uint(mes), __IP, 64));
     LR_blocks_32_bits key_blocks;
@@ -191,7 +191,8 @@ string ENCRYPT(string mes, string key){
         key_blocks._L = 0;
         buff_key = permutation((buff_key << 28) | key_blocks._R, __CP, 48);
         buff_block = permutation(buff_LR_64._R, __EP, 48) ^ buff_key;
-        key_blocks._L |= __Sbox[i][((buff_block   тут надо что то) >> 4 | (buff_block   тут надо что то) & 0x01) & 0x3][((buff_block   тут надо что то) >> 1) & 0xF];
+        key_blocks._L |= __Sbox[i][(((buff_block >> 48 - ((i + 1) * 6)) & 0x20) >> 4 | buff_block & 0x01) & 0x3][(buff_block >> 1) & 0xF];
+        i != 15 ? key_blocks._L <<= 4 : 0;
         // тут же и шифрование
     }
     return mes;
@@ -202,7 +203,9 @@ int main(void){
     string mes = "zzzzzzzz"; // Какие то 8 байт, просто блок сообщения, по идее сюда можно байты с файла вставить, но мало(8), блок DES 64 бит, неболее, а мало... и долго
     string key = "zzzzzzzz"; // Такой же 8 байтный симметричный ключ
     // calc_round_keys(key);
-    s_blocks(0x2E);
+    // ENCRYPT(mes,key);
+    // s_blocks(0x2E);
+
     return 0;
 }
 
